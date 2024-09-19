@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speech Recognition Game</title>
+    <style>
+ @import url('https://fonts.googleapis.com/css2?family=Poppins&display=swap');
+
+body {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+    font-family: "Poppins", sans-serif;
+}
+
+#container {
+    height: 100vh;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-image: linear-gradient(90deg, #161578, #b81055);
+}
+.app-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    text-align: center;
+    color: #fff;
+}
+
+.headings-container {
+    padding: 0 1rem;
+}
+#startBtn {
+    padding: 0.8rem;
+    background-image: linear-gradient(90deg, #F4244C, #F57D4E);
+    border: 1px solid transparent;
+    border-radius: 10px;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.25s;
+}
+
+#startBtn:hover {
+    padding: 1rem;
+}
+
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div class="app-container">
+            <div class="headings-container">
+        <h1 id="word">Speak the word!</h1>
+        </div>
+        <button id="startBtn">Start</button>
+        <p id="score">Score: 0</p>
+        </div>
+    </div>
+    <script>
+
+const wordElement = document.getElementById('word');
+const scoreElement = document.getElementById('score');
+const startBtn = document.getElementById('startBtn');
+
+let currentWord = '';
+let score = 0;
+let recognition;
+const usedWords = new Set();
+
+const fetchRandomWord = async () => {
+    try {
+        const response = await fetch('https://random-word-api.herokuapp.com/word?number=1');
+        const data = await response.json();
+        return data[0];
+    } catch (error) {
+        console.error('Error fetching word:', error);
+        return null;
+    }
+};
+
+const showWord = () => {
+    wordElement.textContent = currentWord;
+    wordElement.style.opacity = 1;
+};
+
+const hideWord = () => {
+    wordElement.style.opacity = 0;
+};
+
+const updateScore = () => {
+    scoreElement.textContent = `Score: ${score}`;
+};
+
+const startSpeechRecognition = () => {
+    recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.lang = 'en-US';
+    recognition.interimResults = false;
+
+    recognition.onresult = (event) => {
+        const spokenWord = event.results[0][0].transcript.toLowerCase();
+        if (spokenWord === currentWord) {
+            score++;
+            updateScore();
+        }
+        startGame();
+    };
+
+    recognition.start();
+};
+
+const startGame = async () => {
+    let wordFetched = false;
+
+    while (!wordFetched) {
+        const newWord = await fetchRandomWord();
+        if (newWord && !usedWords.has(newWord)) {
+            currentWord = newWord;
+            usedWords.add(currentWord);
+            wordFetched = true;
+        }
+    }
+
+    showWord();
+    setTimeout(() => {
+        hideWord();
+        setTimeout(() => {
+            startSpeechRecognition();
+        });
+    }, 2000); // Word displayed for 2 seconds
+};
+
+startBtn.addEventListener('click', () => {
+    score = 0;
+    updateScore();
+    usedWords.clear(); // Clear used words when restarting the game
+    startGame();
+});
+
+    </script>
+</body>
+</html>

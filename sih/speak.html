@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speech to Text Checker</title>
+   <style>
+     @import url('https://fonts.googleapis.com/css2?family=Poppins&display=swap');
+
+body {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+    font-family: "Poppins", sans-serif;
+}
+
+.container {
+    height: 100vh;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-image: linear-gradient(90deg, #161578, #b81055);
+}
+.app-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    text-align: center;
+    color: #fff;
+}
+
+.headings-container {
+    padding: 0 1rem;
+}
+#startButton {
+    padding: 0.8rem;
+    background-image: linear-gradient(90deg, #F4244C, #F57D4E);
+    border: 1px solid transparent;
+    border-radius: 10px;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.25s;
+}
+
+#startButton:hover {
+    padding: 1rem;
+}
+#stopButton {
+    padding: 0.8rem;
+    background-image: linear-gradient(90deg, #F4244C, #F57D4E);
+    border: 1px solid transparent;
+    border-radius: 10px;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.25s;
+}
+
+#stopButton:hover {
+    padding: 1rem;
+}
+
+
+   </style>
+</head>
+<body>
+    <div class="container">
+        <div class="app-container">
+            <div class="headings-container">
+        <h1>Speech to Text Checker</h1>
+        <p id="targetSentence">Please say the following sentence:</p>
+        <h2 id="sentenceToSpeak">"the quick brown fox jumps over the lazy dog."</h2>
+        </div>
+        <button id="startButton">Start Listening</button>
+        <button id="stopButton" disabled>Stop Listening</button>
+        <p id="result">Your result will appear here...</p>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+    const startButton = document.getElementById('startButton');
+    const stopButton = document.getElementById('stopButton');
+    const resultElement = document.getElementById('result');
+
+    // The target sentence to compare
+    const targetSentence = "The quick brown fox jumps over the lazy dog";
+
+    let recognition;
+    let isListening = false;
+
+    if ('webkitSpeechRecognition' in window) {
+        recognition = new webkitSpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = 'en-US';
+
+        recognition.onresult = (event) => {
+            let spokenText = '';
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                spokenText += event.results[i][0].transcript;
+            }
+            checkSentence(spokenText);
+        };
+
+        recognition.onstart = () => {
+            isListening = true;
+            startButton.disabled = true;
+            stopButton.disabled = false;
+        };
+
+        recognition.onend = () => {
+            isListening = false;
+            startButton.disabled = false;
+            stopButton.disabled = true;
+        };
+
+        recognition.onerror = (event) => {
+            console.error('Speech recognition error:', event.error);
+            resultElement.textContent = 'Error occurred during speech recognition.';
+        };
+
+        startButton.addEventListener('click', () => {
+            if (!isListening) {
+                recognition.start();
+            }
+        });
+
+        stopButton.addEventListener('click', () => {
+            if (isListening) {
+                recognition.stop();
+            }
+        });
+
+    } else {
+        alert('Speech recognition not supported in this browser.');
+    }
+
+    function checkSentence(spokenText) {
+        if (spokenText.toLowerCase().trim() === targetSentence.toLowerCase().trim()) {
+            resultElement.textContent = 'Correct! You said the sentence accurately.';
+        } else {
+            resultElement.textContent = 'Oops! Your sentence did not match. Try again.';
+        }
+    }
+});
+
+    </script>
+</body>
+</html>
